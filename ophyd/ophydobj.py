@@ -1,3 +1,4 @@
+import os
 from enum import IntFlag
 import functools
 from itertools import count
@@ -6,6 +7,11 @@ import time
 import weakref
 
 from .log import control_layer_logger
+
+
+OPHYD_DEBUG_WITH_INSPECT = os.getenv('OPHYD_DEBUG_WITH_INSPECT')
+if OPHYD_DEBUG_WITH_INSPECT:
+    import inspect
 
 
 def select_version(cls, version):
@@ -136,6 +142,10 @@ class OphydObject:
 
     def __init__(self, *, name=None, attr_name='', parent=None, labels=None,
                  kind=None):
+
+        if OPHYD_DEBUG_WITH_INSPECT:
+            self._stack_init = inspect.stack()
+
         if labels is None:
             labels = set()
         self._ophyd_labels_ = set(labels)
@@ -216,6 +226,11 @@ class OphydObject:
     def __init_subclass__(cls, version=None, version_of=None,
                           version_type=None, **kwargs):
         'This is called automatically in Python for all subclasses of OphydObject'
+
+        if OPHYD_DEBUG_WITH_INSPECT:
+            print(f'Subclassing {cls.__name__}...')
+            cls._stack_subclass = inspect.stack()
+
         super().__init_subclass__(**kwargs)
 
         if version is None:
